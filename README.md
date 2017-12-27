@@ -7,7 +7,7 @@
 # PLAN
 ## MILESTONE 1
 * non-modifying sequence operations
-  - [ ] AllOf, AnyOf, NoneOf
+  - [x] AllOf, AnyOf, NoneOf
   - [ ] CountIf, FindIf
 modifying sequence operations
 * [x] Reverse
@@ -15,8 +15,8 @@ modifying sequence operations
   - [x] StablePartition
   - [ ] NthElement
 * others
-  - [ ] Slide from Sean Parent
-  - [ ] Gather from Sean Parent
+  - [x] make them receive a slice. (like sort.Slice)
+  - [ ] Slide, Gather (See C++ Seasoning talk presented by Sean Parent)
 ## MILESTONE 2
 * other algorithms
   - [ ] LowerBound, UpperBound

@@ -51,6 +51,22 @@ func ExampleReverseRange() {
 	// [5 3 4 2 1]
 }
 
+func ExampleReverseSlice() {
+	is := []int{1, 2, 3, 4, 5}
+	fmt.Println(is)
+
+	algorithm.ReverseSlice(is)
+	fmt.Println(is)
+
+	isInner := is[1:3]
+	algorithm.ReverseSlice(isInner)
+	fmt.Println(is)
+	// Output:
+	// [1 2 3 4 5]
+	// [5 4 3 2 1]
+	// [5 3 4 2 1]
+}
+
 func ExampleRotate() {
 	is := intSlice{1, 2, 3, 4, 5}
 	fmt.Println(is)
@@ -76,6 +92,23 @@ func ExampleRotateRange() {
 	fmt.Println(is, pos)
 
 	pos = algorithm.RotateRange(is, 0, 1, 3)
+	fmt.Println(is, pos)
+
+	// Output:
+	// [1 2 3 4 5]
+	// [3 4 5 1 2] 3
+	// [4 5 3 1 2] 2
+}
+
+func ExampleRotateSlice() {
+	is := []int{1, 2, 3, 4, 5}
+	fmt.Println(is)
+
+	pos := algorithm.RotateSlice(is, 2)
+	fmt.Println(is, pos)
+
+	isInner := is[:3]
+	pos = algorithm.RotateSlice(isInner, 1)
 	fmt.Println(is, pos)
 
 	// Output:
@@ -111,6 +144,22 @@ func ExampleStablePartitionRange() {
 	}
 
 	pos := algorithm.StablePartitionRange(is, 0, 5, pred)
+	fmt.Println(is, pos)
+
+	// Output:
+	// [1 2 3 4 5]
+	// [2 4 1 3 5] 2
+}
+
+func ExampleStablePartitionSlice() {
+	is := []int{1, 2, 3, 4, 5}
+	fmt.Println(is)
+
+	pred := func(i int) bool {
+		return is[i]%2 == 0
+	}
+
+	pos := algorithm.StablePartitionSlice(is, pred)
 	fmt.Println(is, pos)
 
 	// Output:

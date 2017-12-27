@@ -1,4 +1,13 @@
+// package algorithm implements some useful algorithms in C++ STL.
+//
+// API signatures is a copy of sort package in stdlib.
+//   - SomeAlgorithm : receives a predefined interface. (sort.Sort)
+//   - SomeAlgorithmRange : receives a predefined interface and a range [begin, end).
+//   - SomeAlgorithmSlice : receives a slice. (sort.Slice)
+
 package algorithm
+
+import "reflect"
 
 // Getter can get a value at 'i'th position.
 type Getter interface {
@@ -40,7 +49,7 @@ type GetLenSwapper interface {
 	Swapper
 }
 
-// ReverseRange reverse a given container within a range [begin, end)
+// ReverseRange reverse a given container within a range [begin, end).
 func ReverseRange(s Swapper, begin, end int) {
 	mid := (begin + end) / 2
 	for i := begin; i < mid; i++ {
@@ -51,6 +60,18 @@ func ReverseRange(s Swapper, begin, end int) {
 // Reverse reverse a given container.
 func Reverse(ls LenSwapper) {
 	ReverseRange(ls, 0, ls.Len())
+}
+
+// ReverseSlice is a slice version of Reverse.
+func ReverseSlice(slice interface{}) {
+	rv := reflect.ValueOf(slice)
+	swap := reflect.Swapper(slice)
+	length := rv.Len()
+
+	mid := length / 2
+	for i := 0; i < mid; i++ {
+		swap(i, length-1-i)
+	}
 }
 
 // RotateRange rotates elements in a given container within a range [begin, end)
@@ -81,6 +102,32 @@ func Rotate(ls LenSwapper, middle int) int {
 	return RotateRange(ls, 0, middle, ls.Len())
 }
 
+// RotateSlice is a Rotate function with a slice.
+func RotateSlice(slice interface{}, middle int) int {
+	return rotateSliceImpl(reflect.Swapper(slice), 0, middle, reflect.ValueOf(slice).Len())
+}
+
+func rotateSliceImpl(swap func(i, j int), begin, middle, end int) int {
+	if begin > middle || middle > end {
+		return begin
+	}
+
+	retidx := end - middle + begin
+	next := middle
+	for begin != next {
+		swap(begin, next)
+		begin++
+		next++
+		if next == end {
+			next = middle
+		}
+		if begin == middle {
+			middle = next
+		}
+	}
+	return retidx
+}
+
 // StablePartitionRange partitions in two groups.
 func StablePartitionRange(gs GetSwapper, begin, end int, pred func(v interface{}) bool) int {
 	if len := end - begin; len == 0 {
@@ -102,6 +149,28 @@ func StablePartitionRange(gs GetSwapper, begin, end int, pred func(v interface{}
 // StablePartition partitions in two groups.
 func StablePartition(gls GetLenSwapper, pred func(v interface{}) bool) int {
 	return StablePartitionRange(gls, 0, gls.Len(), pred)
+}
+
+func stablePartitionSliceImpl(swap func(i, j int), begin, end int, pred func(i int) bool) int {
+	if len := end - begin; len == 0 {
+		return begin
+	} else if len == 1 {
+		if pred(begin) {
+			return begin + 1
+		}
+		return begin
+	} else {
+		middle := (begin + end) / 2
+		return rotateSliceImpl(swap,
+			stablePartitionSliceImpl(swap, begin, middle, pred),
+			middle,
+			stablePartitionSliceImpl(swap, middle, end, pred))
+	}
+}
+
+// StablePartitionSlice is a Rotate function with a slice.
+func StablePartitionSlice(slice interface{}, pred func(i int) bool) int {
+	return stablePartitionSliceImpl(reflect.Swapper(slice), 0, reflect.ValueOf(slice).Len(), pred)
 }
 
 // AllOfRange returns true only if all elements meet a given condition
