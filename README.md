@@ -9,8 +9,8 @@
 * non-modifying sequence operations
   - [x] AllOf, AnyOf, NoneOf
   - [ ] CountIf, FindIf
-modifying sequence operations
-* [x] Reverse
+* modifying sequence operations
+  - [x] Reverse
   - [x] Rotate
   - [x] StablePartition
   - [ ] NthElement
