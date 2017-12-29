@@ -173,7 +173,7 @@ func StablePartitionSlice(slice interface{}, pred func(i int) bool) int {
 	return stablePartitionSliceImpl(reflect.Swapper(slice), 0, reflect.ValueOf(slice).Len(), pred)
 }
 
-// AllOfRange returns true only if all elements meet a given condition
+// AllOfRange returns true only if all elements meet a given condition.
 func AllOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
 	for i := begin; i < end; i++ {
 		if !pred(g.Get(i)) {
@@ -183,9 +183,21 @@ func AllOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
 	return true
 }
 
-// AllOf returns true only if all elements meet a given condition
+// AllOf returns true only if all elements meet a given condition.
 func AllOf(gl GetLenner, pred func(v interface{}) bool) bool {
 	return AllOfRange(gl, 0, gl.Len(), pred)
+}
+
+// AllOfSlice returns true only if all elements in a given slice meet a given condition.
+func AllOfSlice(slice interface{}, pred func(i int) bool) bool {
+	length := reflect.ValueOf(slice).Len()
+
+	for i := 0; i < length; i++ {
+		if !pred(i) {
+			return false
+		}
+	}
+	return true
 }
 
 // NoneOfRange returns true only if no element meets a given condition
@@ -203,6 +215,18 @@ func NoneOf(gl GetLenner, pred func(v interface{}) bool) bool {
 	return NoneOfRange(gl, 0, gl.Len(), pred)
 }
 
+// NoneOfSlice returns true only if no element in a given slice meets a given condition.
+func NoneOfSlice(slice interface{}, pred func(i int) bool) bool {
+	length := reflect.ValueOf(slice).Len()
+
+	for i := 0; i < length; i++ {
+		if pred(i) {
+			return false
+		}
+	}
+	return true
+}
+
 // AnyOfRange returns true if any element meet a given condition
 func AnyOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
 	for i := begin; i < end; i++ {
@@ -216,4 +240,16 @@ func AnyOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
 // AnyOf returns true if any element meet a given condition
 func AnyOf(gl GetLenner, pred func(v interface{}) bool) bool {
 	return AnyOfRange(gl, 0, gl.Len(), pred)
+}
+
+// AnyOfSlice returns true if any element in a given slice meets a given condition.
+func AnyOfSlice(slice interface{}, pred func(i int) bool) bool {
+	length := reflect.ValueOf(slice).Len()
+
+	for i := 0; i < length; i++ {
+		if pred(i) {
+			return true
+		}
+	}
+	return false
 }

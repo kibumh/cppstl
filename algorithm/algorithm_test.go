@@ -167,6 +167,24 @@ func ExampleStablePartitionSlice() {
 	// [2 4 1 3 5] 2
 }
 
+func ExampleAllOfSlice() {
+	s := []int{1, 2, 3, 4, 5}
+	pred := func(i int) bool {
+		return s[i]%2 == 0
+	}
+	fmt.Println(algorithm.AllOfSlice(s, pred))
+
+	s2 := []int{2, 4, 6, 8, 10}
+	pred2 := func(i int) bool {
+		return s2[i]%2 == 0
+	}
+	fmt.Println(algorithm.AllOfSlice(s2, pred2))
+
+	// Output:
+	// false
+	// true
+}
+
 func ExampleAllOf() {
 	pred := func(v interface{}) bool {
 		return v.(int)%2 == 0
@@ -179,12 +197,48 @@ func ExampleAllOf() {
 	// true
 }
 
+func ExampleNoneOfSlice() {
+	s := []int{1, 3, 5, 7, 9}
+	pred := func(i int) bool {
+		return s[i]%2 == 0
+	}
+	fmt.Println(algorithm.NoneOfSlice(s, pred))
+
+	s2 := []int{2, 4, 6, 8, 10}
+	pred2 := func(i int) bool {
+		return s2[i]%2 == 0
+	}
+	fmt.Println(algorithm.NoneOfSlice(s2, pred2))
+
+	// Output:
+	// true
+	// false
+}
+
 func ExampleNoneOf() {
 	pred := func(v interface{}) bool {
 		return v.(int)%2 == 0
 	}
 	fmt.Println(algorithm.NoneOf(intSlice{1, 3, 5, 7, 9}, pred))
 	fmt.Println(algorithm.NoneOf(intSlice{2, 4, 6, 8, 10}, pred))
+
+	// Output:
+	// true
+	// false
+}
+
+func ExampleAnyOfSlice() {
+	s := []int{1, 2, 3, 4, 5}
+	pred := func(i int) bool {
+		return s[i]%2 != 0
+	}
+	fmt.Println(algorithm.AnyOfSlice(s, pred))
+
+	s2 := []int{2, 4, 6, 8, 10}
+	pred2 := func(i int) bool {
+		return s2[i]%2 != 0
+	}
+	fmt.Println(algorithm.AnyOfSlice(s2, pred2))
 
 	// Output:
 	// true
