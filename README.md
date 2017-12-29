@@ -1,8 +1,14 @@
-# Useful C++ STL algorithm (only?) impelmented in go
-- containers : We have a slice and a map. What else do we need?
-- iterators : ?.?
-- algorithms : lovely rotate, nthelement, etc.
+[![Build Status](https://travis-ci.org/kibumh/cppstl.png)](https://travis-ci.org/kibumh/cppstl)
 
+# Useful C++ STL algorithms impelmented in go
+
+# Quick Start
+```
+go get -u github.com/kibumh/cppstl/algorithm
+```
+
+# Go Doc
+https://godoc.org/github.com/kibumh/cppstl/algorithm
 
 # PLAN
 ## MILESTONE 1
