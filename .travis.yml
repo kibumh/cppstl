@@ -3,3 +3,6 @@ go:
   - stable
 
 script: go test ./... 
+
+notifications:
+  email: false
