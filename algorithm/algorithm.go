@@ -7,11 +7,18 @@
 
 package algorithm
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // Getter can get a value at 'i'th position.
 type Getter interface {
 	Get(i int) interface{}
+}
+
+// Lesser compares two elements.
+type Lesser interface {
+	Less(i, j int) bool
 }
 
 // Lenner has a length
@@ -27,6 +34,12 @@ type Swapper interface {
 // LenSwapper is both a Lenner and a Swapper
 type LenSwapper interface {
 	Lenner
+	Swapper
+}
+
+// LessSwapper is both a Lesser and a Swapper
+type LessSwapper interface {
+	Lesser
 	Swapper
 }
 
@@ -46,6 +59,13 @@ type GetSwapper interface {
 type GetLenSwapper interface {
 	Getter
 	Lenner
+	Swapper
+}
+
+// LenLessSwapper is both a Lenner, a Lesser and a Swapper
+type LenLessSwapper interface {
+	Lenner
+	Lesser
 	Swapper
 }
 
@@ -252,4 +272,55 @@ func AnyOfSlice(slice interface{}, pred func(i int) bool) bool {
 		}
 	}
 	return false
+}
+
+// NthElementRange rearranges a range [begin, end) in such a way that the element at nth(k) position is the element that would occur in that position if a range is sorted. All of the other elements in a range before nth position is less than or equal to the new nth element.
+func NthElementRange(ls LessSwapper, begin, end, k int) {
+	nthElementSliceImpl(ls.Swap, ls.Less, begin, end, k)
+}
+
+// NthElement rearranges a slice in such a way that the element at nth(k) position is the element that would occur in that position if slice is sorted. All of the other elements before nth position is less than or equal to the new nth element.
+func NthElement(lls LenLessSwapper, k int) {
+	NthElementRange(lls, 0, lls.Len(), k)
+}
+
+// NthElementSlice rearranges a slice in such a way that the element at nth(k) position is the element that would occur in that position if slice is sorted. All of the other elements before nth position is less than or equal to the new nth element.
+func NthElementSlice(slice interface{}, less func(i, j int) bool, k int) {
+	rv := reflect.ValueOf(slice)
+	swap := reflect.Swapper(slice)
+	length := rv.Len()
+
+	nthElementSliceImpl(swap, less, 0, length, k)
+}
+
+func nthElementSliceImpl(swap func(i, j int), less func(i, j int) bool, begin, end, k int) {
+	if begin+1 >= end {
+		return
+	}
+
+	pidx := begin
+	pidx = partitionSliceImpl(swap, less, begin, end, pidx)
+	if k == pidx {
+		return
+	} else if k < pidx {
+		nthElementSliceImpl(swap, less, begin, pidx, k)
+		return
+	} else {
+		nthElementSliceImpl(swap, less, pidx+1, end, k)
+		return
+	}
+}
+
+func partitionSliceImpl(swap func(i, j int), less func(i, j int) bool, begin, end, pidx int) int {
+	swap(end-1, pidx)
+	pidx = end - 1
+	sidx := begin
+	for i := begin; i < end-1; i++ {
+		if less(i, pidx) {
+			swap(sidx, i)
+			sidx++
+		}
+	}
+	swap(end-1, sidx)
+	return sidx
 }

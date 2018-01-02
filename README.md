@@ -19,7 +19,7 @@ https://godoc.org/github.com/kibumh/cppstl/algorithm
   - [x] Reverse
   - [x] Rotate
   - [x] StablePartition
-  - [ ] NthElement
+  - [x] NthElement
 * others
   - [x] make them receive a slice. (like sort.Slice)
   - [ ] Slide, Gather (See C++ Seasoning talk presented by Sean Parent)

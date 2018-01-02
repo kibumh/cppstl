@@ -256,3 +256,24 @@ func ExampleAnyOf() {
 	// true
 	// false
 }
+
+func ExampleNthElementSlice() {
+	is := []int{3, 1, 4, 5, 2}
+
+	for k := 0; k < 5; k++ {
+		newis := append([]int(nil), is...)
+		less := func(i, j int) bool {
+			return newis[i] < newis[j]
+		}
+
+		algorithm.NthElementSlice(newis, less, k)
+		fmt.Println(newis[k])
+	}
+
+	// Output:
+	// 1
+	// 2
+	// 3
+	// 4
+	// 5
+}
