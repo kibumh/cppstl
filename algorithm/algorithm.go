@@ -77,7 +77,7 @@ func Reverse(ls LenSwapper) {
 // ReverseRange reverse a given container within a range [begin, end).
 func ReverseRange(s Swapper, begin, end int) {
 	mid := (begin + end) / 2
-	for i := begin; i < mid; i++ {
+	for i := 0; i < mid-begin; i++ {
 		s.Swap(begin+i, end-1-i)
 	}
 }
@@ -87,10 +87,13 @@ func ReverseSlice(slice interface{}) {
 	rv := reflect.ValueOf(slice)
 	swap := reflect.Swapper(slice)
 	length := rv.Len()
+	reverseSliceImpl(swap, 0, length)
+}
 
-	mid := length / 2
-	for i := 0; i < mid; i++ {
-		swap(i, length-1-i)
+func reverseSliceImpl(swap func(i, j int), begin, end int) {
+	mid := (begin + end) / 2
+	for i := 0; i < mid-begin; i++ {
+		swap(begin+i, end-1-i)
 	}
 }
 
@@ -105,24 +108,10 @@ func RotateRange(s Swapper, begin, middle, end int) int {
 	if begin > middle || middle > end {
 		return begin
 	}
-
-	retidx := end - middle + begin
-	next := middle
-	for begin != next {
-		s.Swap(begin, next)
-		begin++
-		next++
-		if begin == middle {
-			if next == end {
-				return retidx
-			}
-			middle = next
-		}
-		if next == end {
-			next = middle
-		}
-	}
-	return retidx
+	ReverseRange(s, begin, middle)
+	ReverseRange(s, middle, end)
+	ReverseRange(s, begin, end)
+	return end - middle + begin
 }
 
 // RotateSlice is a Rotate function with a slice.
@@ -134,24 +123,10 @@ func rotateSliceImpl(swap func(i, j int), begin, middle, end int) int {
 	if begin > middle || middle > end {
 		return begin
 	}
-
-	retidx := end - middle + begin
-	next := middle
-	for begin != next {
-		swap(begin, next)
-		begin++
-		next++
-		if begin == middle {
-			if next == end {
-				return retidx
-			}
-			middle = next
-		}
-		if next == end {
-			next = middle
-		}
-	}
-	return retidx
+	reverseSliceImpl(swap, begin, middle)
+	reverseSliceImpl(swap, middle, end)
+	reverseSliceImpl(swap, begin, end)
+	return end - middle + begin
 }
 
 // StablePartition partitions in two groups.
@@ -280,17 +255,23 @@ func AnyOfSlice(slice interface{}, pred func(i int) bool) bool {
 	return false
 }
 
-// NthElement rearranges a slice in such a way that the element at nth(k) position is the element that would occur in that position if slice is sorted. All of the other elements before nth position is less than or equal to the new nth element.
+// NthElement rearranges a slice in such a way that the element at nth(k) position is
+// the element that would occur in that position if slice is sorted.
+// All of the other elements before nth position is less than or equal to the new nth element.
 func NthElement(lls LenLessSwapper, k int) {
 	NthElementRange(lls, 0, lls.Len(), k)
 }
 
-// NthElementRange rearranges a range [begin, end) in such a way that the element at nth(k) position is the element that would occur in that position if a range is sorted. All of the other elements in a range before nth position is less than or equal to the new nth element.
+// NthElementRange rearranges a range [begin, end) in such a way that the element at
+// nth(k) position is the element that would occur in that position if a range is sorted.
+// All of the other elements in a range before nth position is less than or equal to the new nth element.
 func NthElementRange(ls LessSwapper, begin, end, k int) {
 	nthElementSliceImpl(ls.Swap, ls.Less, begin, end, k)
 }
 
-// NthElementSlice rearranges a slice in such a way that the element at nth(k) position is the element that would occur in that position if slice is sorted. All of the other elements before nth position is less than or equal to the new nth element.
+// NthElementSlice rearranges a slice in such a way that the element at nth(k) position is
+// the element that would occur in that position if slice is sorted.
+// All of the other elements before nth position is less than or equal to the new nth element.
 func NthElementSlice(slice interface{}, less func(i, j int) bool, k int) {
 	rv := reflect.ValueOf(slice)
 	swap := reflect.Swapper(slice)
