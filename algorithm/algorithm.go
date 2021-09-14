@@ -69,17 +69,17 @@ type LenLessSwapper interface {
 	Swapper
 }
 
+// Reverse reverse a given container.
+func Reverse(ls LenSwapper) {
+	ReverseRange(ls, 0, ls.Len())
+}
+
 // ReverseRange reverse a given container within a range [begin, end).
 func ReverseRange(s Swapper, begin, end int) {
 	mid := (begin + end) / 2
 	for i := begin; i < mid; i++ {
 		s.Swap(begin+i, end-1-i)
 	}
-}
-
-// Reverse reverse a given container.
-func Reverse(ls LenSwapper) {
-	ReverseRange(ls, 0, ls.Len())
 }
 
 // ReverseSlice is a slice version of Reverse.
@@ -92,6 +92,11 @@ func ReverseSlice(slice interface{}) {
 	for i := 0; i < mid; i++ {
 		swap(i, length-1-i)
 	}
+}
+
+// Rotate rotate elements in such a way that the value at 'middle' becomes the first element.
+func Rotate(ls LenSwapper, middle int) int {
+	return RotateRange(ls, 0, middle, ls.Len())
 }
 
 // RotateRange rotates elements in a given container within a range [begin, end)
@@ -107,19 +112,17 @@ func RotateRange(s Swapper, begin, middle, end int) int {
 		s.Swap(begin, next)
 		begin++
 		next++
+		if begin == middle {
+			if next == end {
+				return retidx
+			}
+			middle = next
+		}
 		if next == end {
 			next = middle
 		}
-		if begin == middle {
-			middle = next
-		}
 	}
 	return retidx
-}
-
-// Rotate rotate elements in such a way that the value at 'middle' becomes the first element.
-func Rotate(ls LenSwapper, middle int) int {
-	return RotateRange(ls, 0, middle, ls.Len())
 }
 
 // RotateSlice is a Rotate function with a slice.
@@ -138,14 +141,22 @@ func rotateSliceImpl(swap func(i, j int), begin, middle, end int) int {
 		swap(begin, next)
 		begin++
 		next++
+		if begin == middle {
+			if next == end {
+				return retidx
+			}
+			middle = next
+		}
 		if next == end {
 			next = middle
 		}
-		if begin == middle {
-			middle = next
-		}
 	}
 	return retidx
+}
+
+// StablePartition partitions in two groups.
+func StablePartition(gls GetLenSwapper, pred func(v interface{}) bool) int {
+	return StablePartitionRange(gls, 0, gls.Len(), pred)
 }
 
 // StablePartitionRange partitions in two groups.
@@ -166,9 +177,9 @@ func StablePartitionRange(gs GetSwapper, begin, end int, pred func(v interface{}
 	}
 }
 
-// StablePartition partitions in two groups.
-func StablePartition(gls GetLenSwapper, pred func(v interface{}) bool) int {
-	return StablePartitionRange(gls, 0, gls.Len(), pred)
+// StablePartitionSlice is a Rotate function with a slice.
+func StablePartitionSlice(slice interface{}, pred func(i int) bool) int {
+	return stablePartitionSliceImpl(reflect.Swapper(slice), 0, reflect.ValueOf(slice).Len(), pred)
 }
 
 func stablePartitionSliceImpl(swap func(i, j int), begin, end int, pred func(i int) bool) int {
@@ -188,9 +199,9 @@ func stablePartitionSliceImpl(swap func(i, j int), begin, end int, pred func(i i
 	}
 }
 
-// StablePartitionSlice is a Rotate function with a slice.
-func StablePartitionSlice(slice interface{}, pred func(i int) bool) int {
-	return stablePartitionSliceImpl(reflect.Swapper(slice), 0, reflect.ValueOf(slice).Len(), pred)
+// AllOf returns true only if all elements meet a given condition.
+func AllOf(gl GetLenner, pred func(v interface{}) bool) bool {
+	return AllOfRange(gl, 0, gl.Len(), pred)
 }
 
 // AllOfRange returns true only if all elements meet a given condition.
@@ -201,11 +212,6 @@ func AllOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
 		}
 	}
 	return true
-}
-
-// AllOf returns true only if all elements meet a given condition.
-func AllOf(gl GetLenner, pred func(v interface{}) bool) bool {
-	return AllOfRange(gl, 0, gl.Len(), pred)
 }
 
 // AllOfSlice returns true only if all elements in a given slice meet a given condition.
@@ -220,6 +226,11 @@ func AllOfSlice(slice interface{}, pred func(i int) bool) bool {
 	return true
 }
 
+// NoneOf returns true only if no element meets a given condition
+func NoneOf(gl GetLenner, pred func(v interface{}) bool) bool {
+	return NoneOfRange(gl, 0, gl.Len(), pred)
+}
+
 // NoneOfRange returns true only if no element meets a given condition
 func NoneOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
 	for i := begin; i < end; i++ {
@@ -228,11 +239,6 @@ func NoneOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
 		}
 	}
 	return true
-}
-
-// NoneOf returns true only if no element meets a given condition
-func NoneOf(gl GetLenner, pred func(v interface{}) bool) bool {
-	return NoneOfRange(gl, 0, gl.Len(), pred)
 }
 
 // NoneOfSlice returns true only if no element in a given slice meets a given condition.
@@ -247,6 +253,11 @@ func NoneOfSlice(slice interface{}, pred func(i int) bool) bool {
 	return true
 }
 
+// AnyOf returns true if any element meet a given condition
+func AnyOf(gl GetLenner, pred func(v interface{}) bool) bool {
+	return AnyOfRange(gl, 0, gl.Len(), pred)
+}
+
 // AnyOfRange returns true if any element meet a given condition
 func AnyOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
 	for i := begin; i < end; i++ {
@@ -255,11 +266,6 @@ func AnyOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
 		}
 	}
 	return false
-}
-
-// AnyOf returns true if any element meet a given condition
-func AnyOf(gl GetLenner, pred func(v interface{}) bool) bool {
-	return AnyOfRange(gl, 0, gl.Len(), pred)
 }
 
 // AnyOfSlice returns true if any element in a given slice meets a given condition.
@@ -274,14 +280,14 @@ func AnyOfSlice(slice interface{}, pred func(i int) bool) bool {
 	return false
 }
 
-// NthElementRange rearranges a range [begin, end) in such a way that the element at nth(k) position is the element that would occur in that position if a range is sorted. All of the other elements in a range before nth position is less than or equal to the new nth element.
-func NthElementRange(ls LessSwapper, begin, end, k int) {
-	nthElementSliceImpl(ls.Swap, ls.Less, begin, end, k)
-}
-
 // NthElement rearranges a slice in such a way that the element at nth(k) position is the element that would occur in that position if slice is sorted. All of the other elements before nth position is less than or equal to the new nth element.
 func NthElement(lls LenLessSwapper, k int) {
 	NthElementRange(lls, 0, lls.Len(), k)
+}
+
+// NthElementRange rearranges a range [begin, end) in such a way that the element at nth(k) position is the element that would occur in that position if a range is sorted. All of the other elements in a range before nth position is less than or equal to the new nth element.
+func NthElementRange(ls LessSwapper, begin, end, k int) {
+	nthElementSliceImpl(ls.Swap, ls.Less, begin, end, k)
 }
 
 // NthElementSlice rearranges a slice in such a way that the element at nth(k) position is the element that would occur in that position if slice is sorted. All of the other elements before nth position is less than or equal to the new nth element.
