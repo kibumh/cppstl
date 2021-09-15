@@ -69,6 +69,12 @@ type LenLessSwapper interface {
 	Swapper
 }
 
+func transformPred(pred func(v interface{}) bool, g Getter) func(i int) bool {
+	return func(i int) bool {
+		return pred(g.Get(i))
+	}
+}
+
 // Reverse reverse a given container.
 func Reverse(ls LenSwapper) {
 	ReverseRange(ls, 0, ls.Len())
@@ -76,10 +82,7 @@ func Reverse(ls LenSwapper) {
 
 // ReverseRange reverse a given container within a range [begin, end).
 func ReverseRange(s Swapper, begin, end int) {
-	mid := (begin + end) / 2
-	for i := 0; i < mid-begin; i++ {
-		s.Swap(begin+i, end-1-i)
-	}
+	reverseImpl(s.Swap, begin, end)
 }
 
 // ReverseSlice is a slice version of Reverse.
@@ -87,10 +90,10 @@ func ReverseSlice(slice interface{}) {
 	rv := reflect.ValueOf(slice)
 	swap := reflect.Swapper(slice)
 	length := rv.Len()
-	reverseSliceImpl(swap, 0, length)
+	reverseImpl(swap, 0, length)
 }
 
-func reverseSliceImpl(swap func(i, j int), begin, end int) {
+func reverseImpl(swap func(i, j int), begin, end int) {
 	mid := (begin + end) / 2
 	for i := 0; i < mid-begin; i++ {
 		swap(begin+i, end-1-i)
@@ -105,27 +108,21 @@ func Rotate(ls LenSwapper, middle int) int {
 // RotateRange rotates elements in a given container within a range [begin, end)
 // It returns a index to the value previously at 'begin'.
 func RotateRange(s Swapper, begin, middle, end int) int {
-	if begin > middle || middle > end {
-		return begin
-	}
-	ReverseRange(s, begin, middle)
-	ReverseRange(s, middle, end)
-	ReverseRange(s, begin, end)
-	return end - middle + begin
+	return rotateImpl(s.Swap, begin, middle, end)
 }
 
 // RotateSlice is a Rotate function with a slice.
 func RotateSlice(slice interface{}, middle int) int {
-	return rotateSliceImpl(reflect.Swapper(slice), 0, middle, reflect.ValueOf(slice).Len())
+	return rotateImpl(reflect.Swapper(slice), 0, middle, reflect.ValueOf(slice).Len())
 }
 
-func rotateSliceImpl(swap func(i, j int), begin, middle, end int) int {
+func rotateImpl(swap func(i, j int), begin, middle, end int) int {
 	if begin > middle || middle > end {
 		return begin
 	}
-	reverseSliceImpl(swap, begin, middle)
-	reverseSliceImpl(swap, middle, end)
-	reverseSliceImpl(swap, begin, end)
+	reverseImpl(swap, begin, middle)
+	reverseImpl(swap, middle, end)
+	reverseImpl(swap, begin, end)
 	return end - middle + begin
 }
 
@@ -136,20 +133,7 @@ func StablePartition(gls GetLenSwapper, pred func(v interface{}) bool) int {
 
 // StablePartitionRange partitions in two groups.
 func StablePartitionRange(gs GetSwapper, begin, end int, pred func(v interface{}) bool) int {
-	if len := end - begin; len == 0 {
-		return begin
-	} else if len == 1 {
-		if pred(gs.Get(begin)) {
-			return begin + 1
-		}
-		return begin
-	} else {
-		middle := (begin + end) / 2
-		return RotateRange(gs,
-			StablePartitionRange(gs, begin, middle, pred),
-			middle,
-			StablePartitionRange(gs, middle, end, pred))
-	}
+	return stablePartitionSliceImpl(gs.Swap, begin, end, transformPred(pred, gs))
 }
 
 // StablePartitionSlice is a Rotate function with a slice.
@@ -167,7 +151,7 @@ func stablePartitionSliceImpl(swap func(i, j int), begin, end int, pred func(i i
 		return begin
 	} else {
 		middle := (begin + end) / 2
-		return rotateSliceImpl(swap,
+		return rotateImpl(swap,
 			stablePartitionSliceImpl(swap, begin, middle, pred),
 			middle,
 			stablePartitionSliceImpl(swap, middle, end, pred))
@@ -181,19 +165,16 @@ func AllOf(gl GetLenner, pred func(v interface{}) bool) bool {
 
 // AllOfRange returns true only if all elements meet a given condition.
 func AllOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
-	for i := begin; i < end; i++ {
-		if !pred(g.Get(i)) {
-			return false
-		}
-	}
-	return true
+	return allOfImpl(begin, end, transformPred(pred, g))
 }
 
 // AllOfSlice returns true only if all elements in a given slice meet a given condition.
 func AllOfSlice(slice interface{}, pred func(i int) bool) bool {
-	length := reflect.ValueOf(slice).Len()
+	return allOfImpl(0, reflect.ValueOf(slice).Len(), pred)
+}
 
-	for i := 0; i < length; i++ {
+func allOfImpl(begin, end int, pred func(i int) bool) bool {
+	for i := begin; i < end; i++ {
 		if !pred(i) {
 			return false
 		}
@@ -208,19 +189,16 @@ func NoneOf(gl GetLenner, pred func(v interface{}) bool) bool {
 
 // NoneOfRange returns true only if no element meets a given condition
 func NoneOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
-	for i := begin; i < end; i++ {
-		if pred(g.Get(i)) {
-			return false
-		}
-	}
-	return true
+	return noneOfImpl(begin, end, transformPred(pred, g))
 }
 
 // NoneOfSlice returns true only if no element in a given slice meets a given condition.
 func NoneOfSlice(slice interface{}, pred func(i int) bool) bool {
-	length := reflect.ValueOf(slice).Len()
+	return noneOfImpl(0, reflect.ValueOf(slice).Len(), pred)
+}
 
-	for i := 0; i < length; i++ {
+func noneOfImpl(begin, end int, pred func(i int) bool) bool {
+	for i := begin; i < end; i++ {
 		if pred(i) {
 			return false
 		}
@@ -235,19 +213,16 @@ func AnyOf(gl GetLenner, pred func(v interface{}) bool) bool {
 
 // AnyOfRange returns true if any element meet a given condition
 func AnyOfRange(g Getter, begin, end int, pred func(v interface{}) bool) bool {
-	for i := begin; i < end; i++ {
-		if pred(g.Get(i)) {
-			return true
-		}
-	}
-	return false
+	return anyOfImpl(begin, end, transformPred(pred, g))
 }
 
 // AnyOfSlice returns true if any element in a given slice meets a given condition.
 func AnyOfSlice(slice interface{}, pred func(i int) bool) bool {
-	length := reflect.ValueOf(slice).Len()
+	return anyOfImpl(0, reflect.ValueOf(slice).Len(), pred)
+}
 
-	for i := 0; i < length; i++ {
+func anyOfImpl(begin, end int, pred func(i int) bool) bool {
+	for i := begin; i < end; i++ {
 		if pred(i) {
 			return true
 		}
@@ -273,11 +248,7 @@ func NthElementRange(ls LessSwapper, begin, end, k int) {
 // the element that would occur in that position if slice is sorted.
 // All of the other elements before nth position is less than or equal to the new nth element.
 func NthElementSlice(slice interface{}, less func(i, j int) bool, k int) {
-	rv := reflect.ValueOf(slice)
-	swap := reflect.Swapper(slice)
-	length := rv.Len()
-
-	nthElementSliceImpl(swap, less, 0, length, k)
+	nthElementSliceImpl(reflect.Swapper(slice), less, 0, reflect.ValueOf(slice).Len(), k)
 }
 
 func nthElementSliceImpl(swap func(i, j int), less func(i, j int) bool, begin, end, k int) {
